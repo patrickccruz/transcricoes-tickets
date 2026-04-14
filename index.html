@@ -38,11 +38,9 @@
             }
 
             try {
+                // Ao invés de um SELECT direto exposto, usamos um RPC (Função Segura)
                 const { data, error } = await supabaseClient
-                    .from('tickets')
-                    .select('transcript_html')
-                    .eq('channel_id', ticketId)
-                    .single();
+                    .rpc('get_ticket_transcript', { p_channel_id: ticketId });
 
                 if (error || !data || !data.transcript_html) {
                     document.getElementById('loading').innerHTML = '<h2>Transcrição não encontrada ou expirada.</h2>';
