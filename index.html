@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Transcrições</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #313338; color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .loader { border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: #5865F2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #canvas-container iframe { width: 100vw; height: 100vh; border: none; }
+    </style>
+</head>
+<body>
+    <div id="loading" style="text-align: center;">
+        <div class="loader"></div>
+        <p style="margin-top: 15px;">Buscando transcrição no banco de dados...</p>
+    </div>
+    
+    <div id="canvas-container" style="display: none;">
+        <iframe id="transcript-iframe"></iframe>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://vowjzfqnvapmkmllvczu.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvd2p6ZnFudmFwbWttbGx2Y3p1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDQ4NDQ2OCwiZXhwIjoyMDkwMDYwNDY4fQ.fGrrdBffz56z6Y80QCIFmNU5J8hhuEX9NqZGe9_U07w'; 
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function carregarTranscript() {
+            const params = new URLSearchParams(window.location.search);
+            const ticketId = params.get('id');
+
+            if (!ticketId) {
+                document.getElementById('loading').innerHTML = '<h2>ID do Ticket não informado.</h2>';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('tickets')
+                    .select('transcript_html')
+                    .eq('channel_id', ticketId)
+                    .single();
+
+                if (error || !data || !data.transcript_html) {
+                    document.getElementById('loading').innerHTML = '<h2>Transcrição não encontrada ou expirada.</h2>';
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                const container = document.getElementById('canvas-container');
+                container.style.display = 'block';
+                
+                const iframe = document.getElementById('transcript-iframe');
+                iframe.srcdoc = data.transcript_html;
+
+            } catch (err) {
+                document.getElementById('loading').innerHTML = '<h2>Erro ao conectar com o banco de dados.</h2>';
+            }
+        }
+
+        carregarTranscript();
+    </script>
+</body>
+</html>
