@@ -24,7 +24,8 @@
 
     <script>
         const supabaseUrl = 'https://vowjzfqnvapmkmllvczu.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvd2p6ZnFudmFwbWttbGx2Y3p1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDQ4NDQ2OCwiZXhwIjoyMDkwMDYwNDY4fQ.fGrrdBffz56z6Y80QCIFmNU5J8hhuEX9NqZGe9_U07w'; 
+        // Usando a Public/Anon Key - É 100% seguro deixar ela visível aqui!
+        const supabaseKey = 'sb_publishable_vb6TFky2P8CDsEKdlnKc2w_9cGO0Ljp'; 
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         async function carregarTranscript() {
