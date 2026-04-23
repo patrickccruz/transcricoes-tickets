@@ -370,31 +370,31 @@
 
             try {
                 const { data: rawData, error } = await supabaseClient
-                    .rpc('get_ticket_transcript', { p_channel_id: ticketId });
+                    .from('tickets')
+                    .select('channel_id, channel_name, author_id, closer_id, closed_at, transcript_html, transcript_url')
+                    .eq('channel_id', ticketId)
+                    .maybeSingle();
 
                 if (error || !rawData) {
                     showError('Transcrição não encontrada.', 'O registro pode ter sido removido ou o ID está incorreto.');
                     return;
                 }
 
-                // Lida com retorno único ou array
-                const data = Array.isArray(rawData) ? rawData[0] : rawData;
-
-                if (!data) {
-                    showError('Dados incompletos.', 'A transcrição foi encontrada mas os dados estão corrompidos.');
-                    return;
-                }
+                const data = rawData;
 
                 // Preencher Metadados
                 document.getElementById('val-name').textContent = '#' + (data.channel_name || 'ticket-sem-nome');
                 document.getElementById('val-id').textContent = data.channel_id || ticketId;
                 document.getElementById('val-author').textContent = data.author_id || 'Desconhecido';
                 document.getElementById('val-closer').textContent = data.closer_id || 'Sistema';
-                
+
                 // Tratamento de Data
                 const closedDate = data.closed_at ? new Date(data.closed_at) : null;
-                document.getElementById('val-date').textContent = (closedDate && !isNaN(closedDate)) 
-                    ? closedDate.toLocaleString('pt-BR') 
+                document.getElementById('val-date').textContent = (closedDate && !isNaN(closedDate))
+                    ? closedDate.toLocaleString('pt-BR', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit'
+                      })
                     : 'Data não registrada';
 
                 // Carregar Iframe
