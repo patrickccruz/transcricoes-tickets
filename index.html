@@ -80,19 +80,21 @@
         }
 
         .info-label {
-            font-size: 11px;
+            font-size: 10px;
             text-transform: uppercase;
             font-weight: 700;
             color: var(--text-muted);
-            margin-bottom: 4px;
-            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            letter-spacing: 0.8px;
+            line-height: 1.2;
         }
 
         .info-value {
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 600;
             color: #fff;
             word-break: break-all;
+            line-height: 1.4;
         }
 
         .status-badge {
@@ -308,12 +310,12 @@
             </div>
 
             <div class="info-card">
-                <div class="info-label">Aberto por</div>
+                <div class="info-label">ID do Autor</div>
                 <div class="info-value" id="val-author">---</div>
             </div>
 
             <div class="info-card">
-                <div class="info-label">Encerrado por</div>
+                <div class="info-label">Encerrado por (ID)</div>
                 <div class="info-value" id="val-closer">---</div>
             </div>
 
@@ -367,11 +369,19 @@
             }
 
             try {
-                const { data, error } = await supabaseClient
+                const { data: rawData, error } = await supabaseClient
                     .rpc('get_ticket_transcript', { p_channel_id: ticketId });
 
-                if (error || !data) {
+                if (error || !rawData) {
                     showError('Transcrição não encontrada.', 'O registro pode ter sido removido ou o ID está incorreto.');
+                    return;
+                }
+
+                // Lida com retorno único ou array
+                const data = Array.isArray(rawData) ? rawData[0] : rawData;
+
+                if (!data) {
+                    showError('Dados incompletos.', 'A transcrição foi encontrada mas os dados estão corrompidos.');
                     return;
                 }
 
@@ -380,11 +390,16 @@
                 document.getElementById('val-id').textContent = data.channel_id || ticketId;
                 document.getElementById('val-author').textContent = data.author_id || 'Desconhecido';
                 document.getElementById('val-closer').textContent = data.closer_id || 'Sistema';
-                document.getElementById('val-date').textContent = new Date(data.closed_at).toLocaleString('pt-BR');
+                
+                // Tratamento de Data
+                const closedDate = data.closed_at ? new Date(data.closed_at) : null;
+                document.getElementById('val-date').textContent = (closedDate && !isNaN(closedDate)) 
+                    ? closedDate.toLocaleString('pt-BR') 
+                    : 'Data não registrada';
 
                 // Carregar Iframe
                 const iframe = document.getElementById('transcript-iframe');
-                iframe.srcdoc = data.transcript_html;
+                iframe.srcdoc = data.transcript_html || '<body style="background:#313338;color:white;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><h3>Conteúdo da transcrição não encontrado.</h3></body>';
 
                 // Processar conteúdo após carregar
                 iframe.onload = () => {
